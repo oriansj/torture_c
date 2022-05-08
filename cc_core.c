@@ -16,7 +16,7 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cc.h"
+#include "cc_globals.h"
 #include "gcc_req.h"
 #include <stdint.h>
 
@@ -42,7 +42,7 @@ int Address_of;
 /* Imported functions */
 char* parse_string(char* string);
 int escape_lookup(char* c);
-char* numerate_number(int a);
+char* int2str(int x, int base, int signed_p);
 
 
 struct token_list* emit(char *s, struct token_list* head)
@@ -93,10 +93,10 @@ struct token_list* sym_lookup(char *s, struct token_list* symbol_list)
 
 void line_error()
 {
-	file_print(global_token->filename, stderr);
-	file_print(":", stderr);
-	file_print(numerate_number(global_token->linenumber), stderr);
-	file_print(":", stderr);
+	fputs(global_token->filename, stderr);
+	fputs(":", stderr);
+	fputs(int2str(global_token->linenumber, 10, TRUE), stderr);
+	fputs(":", stderr);
 }
 
 void require_match(char* message, char* required)
@@ -104,7 +104,7 @@ void require_match(char* message, char* required)
 	if(!match(global_token->s, required))
 	{
 		line_error();
-		file_print(message, stderr);
+		fputs(message, stderr);
 		exit(EXIT_FAILURE);
 	}
 	global_token = global_token->next;
@@ -171,12 +171,12 @@ void variable_load(struct token_list* a)
 {
 	if(match("FUNCTION", a->type->name) && match("(", global_token->s))
 	{
-		function_call(numerate_number(a->depth), TRUE);
+		function_call(int2str(a->depth, 10, TRUE), TRUE);
 		return;
 	}
 	current_target = a->type;
 	emit_out("LOAD_BASE_ADDRESS_eax %");
-	emit_out(numerate_number(a->depth));
+	emit_out(int2str(a->depth, 10, TRUE));
 	emit_out("\n");
 
 	if(TRUE == Address_of) return;
@@ -220,15 +220,15 @@ void global_load(struct token_list* a)
 void primary_expr_failure()
 {
 	line_error();
-	file_print("Recieved ", stderr);
-	file_print(global_token->s, stderr);
-	file_print(" in primary_expr\n", stderr);
+	fputs("Recieved ", stderr);
+	fputs(global_token->s, stderr);
+	fputs(" in primary_expr\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
 void primary_expr_string()
 {
-	char* number_string = numerate_number(current_count);
+	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 	emit_out("LOAD_IMMEDIATE_eax &STRING_");
 	uniqueID_out(function->s, number_string);
@@ -245,7 +245,7 @@ void primary_expr_string()
 void primary_expr_char()
 {
 	emit_out("LOAD_IMMEDIATE_eax %");
-	emit_out(numerate_number(escape_lookup(global_token->s + 1)));
+	emit_out(int2str(escape_lookup(global_token->s + 1), 10, TRUE));
 	emit_out("\n");
 	global_token = global_token->next;
 }
@@ -298,8 +298,8 @@ void primary_expr_variable()
 	}
 
 	line_error();
-	file_print(s ,stderr);
-	file_print(" is not a defined symbol\n", stderr);
+	fputs(s ,stderr);
+	fputs(" is not a defined symbol\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
@@ -384,7 +384,7 @@ void postfix_expr_arrow()
 	{
 		emit_out("# -> offset calculation\n");
 		emit_out("LOAD_IMMEDIATE_ebx %");
-		emit_out(numerate_number(i->offset));
+		emit_out(int2str(i->offset, 10, TRUE));
 		emit_out("\nADD_ebx_to_eax\n");
 	}
 
@@ -409,7 +409,7 @@ void postfix_expr_array()
 	else
 	{
 		emit_out("SAL_eax_Immediate8 !");
-		emit_out(numerate_number(ceil_log2(current_target->indirect->size)));
+		emit_out(int2str(ceil_log2(current_target->indirect->size), 10, TRUE));
 		emit_out("\n");
 	}
 
@@ -440,7 +440,7 @@ void unary_expr_sizeof()
 	require_match("ERROR in unary_expr\nMissing )\n", ")");
 
 	emit_out("LOAD_IMMEDIATE_eax %");
-	emit_out(numerate_number(a->size));
+	emit_out(int2str(a->size, 10, TRUE));
 	emit_out("\n");
 }
 
@@ -567,7 +567,7 @@ void statement();
 /* Evaluate if statements */
 void process_if()
 {
-	char* number_string = numerate_number(current_count);
+	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
 	emit_out("# IF_");
@@ -620,7 +620,7 @@ void process_while()
 	char* nested_break_func = break_target_func;
 	char* nested_break_num = break_target_num;
 
-	char* number_string = numerate_number(current_count);
+	char* number_string = int2str(current_count, 10, TRUE);
 	current_count = current_count + 1;
 
 	break_target_head = "END_WHILE_";
@@ -900,9 +900,9 @@ new_type:
 			else
 			{
 				line_error();
-				file_print("Recieved ", stderr);
-				file_print(global_token->s, stderr);
-				file_print(" in program\n", stderr);
+				fputs("Recieved ", stderr);
+				fputs(global_token->s, stderr);
+				fputs(" in program\n", stderr);
 				exit(EXIT_FAILURE);
 			}
 
@@ -912,9 +912,9 @@ new_type:
 		else
 		{
 			line_error();
-			file_print("Recieved ", stderr);
-			file_print(global_token->s, stderr);
-			file_print(" in program\n", stderr);
+			fputs("Recieved ", stderr);
+			fputs(global_token->s, stderr);
+			fputs(" in program\n", stderr);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -925,5 +925,5 @@ void recursive_output(struct token_list* i, FILE* out)
 {
 	if(NULL == i) return;
 	recursive_output(i->next, out);
-	file_print(i->s, out);
+	fputs(i->s, out);
 }

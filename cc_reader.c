@@ -15,7 +15,7 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cc.h"
+#include "cc_globals.h"
 
 FILE* input;
 struct token_list* token;
@@ -67,19 +67,9 @@ void fixup_label()
 	} while(0 != hold);
 }
 
-int in_set(int c, char* s)
-{
-	while(0 != s[0])
-	{
-		if(c == s[0]) return TRUE;
-		s = s + 1;
-	}
-	return FALSE;
-}
-
 int preserve_keyword(int c)
 {
-	while(!in_set(c, "(){}[],:"))
+	while(!in_set(c, "(){}[],: \t\n;"))
 	{
 		c = consume_byte(c);
 	}

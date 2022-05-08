@@ -16,11 +16,12 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cc.h"
+#include "cc_globals.h"
 #include <stdint.h>
 
 struct token_list* emit(char *s, struct token_list* head);
 int char2hex(int c);
+void reset_hold_string();
 
 char upcase(char a)
 {
@@ -32,13 +33,21 @@ char upcase(char a)
 	return a;
 }
 
+int char2hex(int c)
+{
+	if (c >= '0' && c <= '9') return (c - 48);
+	else if (c >= 'a' && c <= 'f') return (c - 87);
+	else if (c >= 'A' && c <= 'F') return (c - 55);
+	else return -1;
+}
+
 int hexify(int c, int high)
 {
 	int i = char2hex(c);
 
 	if(0 > i)
 	{
-		file_print("Tried to print non-hex number\n", stderr);
+		fputs("Tried to print non-hex number\n", stderr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -104,7 +113,7 @@ collect_weird_string_reset:
 	hold_string[string_index + 4] = '\n';
 
 	char* hold = calloc(string_index + 6, sizeof(char));
-	copy_string(hold, hold_string);
+	strcpy(hold, hold_string);
 	reset_hold_string();
 	return hold;
 }

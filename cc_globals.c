@@ -15,41 +15,19 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "cc.h"
 
-#define MAX_STRING 4096
-// CONSTANT MAX_STRING 4096
-#define FALSE 0
-// CONSTANT FALSE 0
-#define TRUE 1
-// CONSTANT TRUE 1
+/* What types we have */
+struct type* global_types;
+struct type* prim_types;
 
-void file_print(char* s, FILE* f);
-int match(char* a, char* b);
-int in_set(int c, char* s);
+/* What we are currently working on */
+struct token_list* global_token;
 
-struct type
-{
-	struct type* next;
-	int size;
-	int offset;
-	struct type* indirect;
-	struct type* members;
-	struct type* type;
-	char* name;
-};
+/* Output reorder collections*/
+struct token_list* strings_list;
+struct token_list* globals_list;
 
-struct token_list
-{
-	struct token_list* next;
-	struct token_list* locals;
-	struct token_list* prev;
-	char* s;
-	struct type* type;
-	char* filename;
-	struct token_list* arguments;
-	int depth;
-	int linenumber;
-};
+/* Make our string collection more efficient */
+char* hold_string;
+int string_index;

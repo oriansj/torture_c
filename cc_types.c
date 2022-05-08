@@ -15,7 +15,7 @@
  * along with stage0.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cc.h"
+#include "cc_globals.h"
 #include <stdint.h>
 
 /* Initialize default types */
